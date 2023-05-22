@@ -18,7 +18,7 @@ const (
 	maxMessageSize = 512
 )
 
-type Connection interface {
+type Client interface {
 	SendMessage() error
 	PullMessage() error
 	GetChatID() ChatID

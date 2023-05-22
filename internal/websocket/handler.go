@@ -39,7 +39,7 @@ func (h Handler) InitRoutes() *chi.Mux {
 
 func (h Handler) socketHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade our raw HTTP connection to a websocket based one
-	conn, err := upgrader.Upgrade(w, r, nil)
+	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.Logger.Error(fmt.Errorf("error during connection upgradation: %w", err))
 		return
@@ -57,17 +57,17 @@ func (h Handler) socketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	incomingConnection := service.NewWebsocketConnection(
+	client := service.NewWebsocketClient(
 		h.Hub,
-		conn,
+		wsConn,
 		chatID,
 		h.Logger)
 
-	incomingConnection.GetHub().Register(service.ChatID(chatID))
+	client.GetHub().Register(client)
 
 	errChan := make(chan error, 1)
 	go func() {
-		err := incomingConnection.PullMessage()
+		err := client.PullMessage()
 		h.Logger.Error(fmt.Errorf("socket handler - PullMessage - error: %w", err))
 		if err != nil {
 			errChan <- err
@@ -75,7 +75,7 @@ func (h Handler) socketHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	go func() {
-		err := incomingConnection.SendMessage()
+		err := client.SendMessage()
 		h.Logger.Error(fmt.Errorf("socket handler - SendMessage - error: %w", err))
 		if err != nil {
 			errChan <- err

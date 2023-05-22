@@ -50,7 +50,7 @@ type (
 	}
 
 	Chat struct {
-		SendBufferSize int `env:"SEND_BUFFER_SIZE,default=256"`
+		SendBufferSize int `env:"SEND_BUFFER_SIZE,default=256"` // todo
 	}
 )
 

@@ -14,16 +14,16 @@ type Hub struct {
 	// Inbound messages from the connections
 	broadcast chan Message
 
-	register chan ChatID
+	register chan Client
 
-	unregister chan Connection
+	unregister chan Client
 	logger     *logger.Logger
 }
 
 type IHub interface {
 	Run() error
-	Unregister(connection Connection)
-	Register(ChatID)
+	Unregister(conn Client)
+	Register(conn Client)
 	Broadcast(m Message)
 	//GetMessage() Message
 }
@@ -31,8 +31,8 @@ type IHub interface {
 func NewHub(logger *logger.Logger) IHub {
 	return Hub{
 		broadcast:       make(chan Message),
-		register:        make(chan ChatID),
-		unregister:      make(chan Connection),
+		register:        make(chan Client),
+		unregister:      make(chan Client),
 		registeredChats: make(map[ChatID]Chat),
 		logger:          logger,
 	}
@@ -41,19 +41,21 @@ func NewHub(logger *logger.Logger) IHub {
 func (h Hub) Run() error {
 	for {
 		select {
-		case chatID := <-h.register:
-			chat, ok := h.registeredChats[chatID]
+		case conn := <-h.register:
+			chat, ok := h.registeredChats[conn.GetChatID()]
 			if ok {
+				chat.Subscribe(conn.GetSendChan())
 				continue
 			}
 
 			// новый чат:
-			chat = NewChat(h, chatID, h.logger)
-			h.registeredChats[chatID] = chat
-			// todo subscribe - подписаться на chat
+			chat = NewChat(h, conn.GetChatID(), h.logger)
+			h.registeredChats[conn.GetChatID()] = chat
+			chat.Subscribe(conn.GetSendChan())
 
 		case conn := <-h.unregister:
 			if _, ok := h.registeredChats[conn.GetChatID()]; ok {
+				// todo unsubscribe?
 				close(conn.GetSendChan())
 				delete(h.registeredChats, conn.GetChatID())
 			}
@@ -61,19 +63,18 @@ func (h Hub) Run() error {
 		case m := <-h.broadcast:
 			chat, ok := h.registeredChats[m.ChatID]
 			if ok {
-				chat.Enqueue(m)
-				// todo пришло новое сообщ-е, это событие для других подписчиков - для них dequeue
+				chat.Publish(m.Data)
 			}
 		}
 	}
 }
 
-func (h Hub) Unregister(c Connection) {
+func (h Hub) Unregister(c Client) {
 	h.unregister <- c
 }
 
-func (h Hub) Register(id ChatID) {
-	h.register <- id
+func (h Hub) Register(c Client) {
+	h.register <- c
 }
 
 // Broadcast sends new message to the channel
