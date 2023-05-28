@@ -1,5 +1,5 @@
 # chatps
-Experimental group chat with websocket and grpc clients support.
+Сhatps is chat pub/sub. Experimental group chat with websocket and grpc clients support.
 
 
 # Websocket

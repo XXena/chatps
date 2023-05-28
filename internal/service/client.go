@@ -23,5 +23,7 @@ type Client interface {
 	PullMessage() error
 	GetChatID() ChatID
 	GetSendChan() chan []byte
-	GetHub() IHub
+	GetHub() Hub
 }
+
+type SendChan chan []byte

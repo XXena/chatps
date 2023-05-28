@@ -1,7 +1,7 @@
 package service
 
 type GrpcConnection struct {
-	hub IHub
+	hub Hub
 
 	// The grpc connection
 	// todo

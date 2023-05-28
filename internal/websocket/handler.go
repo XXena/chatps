@@ -15,11 +15,11 @@ import (
 
 var (
 	upgrader = websocket.Upgrader{} // use default options
-	Done     chan interface{}       // todo
+	//Done     chan interface{}       // todo
 )
 
 type Handler struct {
-	Hub    service.IHub
+	Hub    service.Hub
 	Cfg    *config.Config
 	Logger *logger.Logger
 }
@@ -67,24 +67,25 @@ func (h Handler) socketHandler(w http.ResponseWriter, r *http.Request) {
 
 	errChan := make(chan error, 1)
 	go func() {
-		err := client.PullMessage()
-		h.Logger.Error(fmt.Errorf("socket handler - PullMessage - error: %w", err))
+		err = client.PullMessage()
 		if err != nil {
-			errChan <- err
+			h.Logger.Error(fmt.Errorf("socket handler - PullMessage - error: %w", err))
 		}
 	}()
 
+	h.Logger.Debug("goroutine PullMessage passed")
 	go func() {
-		err := client.SendMessage()
-		h.Logger.Error(fmt.Errorf("socket handler - SendMessage - error: %w", err))
+		err = client.SendMessage()
 		if err != nil {
-			errChan <- err
+			h.Logger.Error(fmt.Errorf("socket handler - SendMessage - error: %w", err))
 		}
 	}()
+	h.Logger.Debug("goroutine SendMessage passed")
 
 	select {
 	case err := <-errChan:
 		h.Logger.Error(fmt.Errorf("app - Run - error notify: %w", err))
 	}
 
+	h.Logger.Debug("socket handler finished")
 }
