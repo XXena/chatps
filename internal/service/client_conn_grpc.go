@@ -1,11 +1,12 @@
 package service
 
-type GrpcConnection struct {
-	hub Hub
+import "github.com/XXena/chatps/pkg/logger"
 
+type grpcClient struct {
 	// The grpc connection
 	// todo
-
-	// Buffered channel for outbound messages
-	send chan []byte
+	chatID   string
+	sendChan SendChan
+	logger   *logger.Logger
+	Hub      Hub
 }

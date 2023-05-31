@@ -2,8 +2,8 @@ package service
 
 import "github.com/XXena/chatps/pkg/logger"
 
-// InternalHub maintains the set of active chats
-type InternalHub struct {
+// hub maintains the set of active chats
+type hub struct {
 	// Registered chats grouped by id
 	registeredChats map[ChatID]Chat
 
@@ -16,8 +16,8 @@ type InternalHub struct {
 	logger     *logger.Logger
 }
 
-func NewInternalHub(logger *logger.Logger) Hub {
-	return InternalHub{
+func NewHub(logger *logger.Logger) Hub {
+	return hub{
 		broadcast:       make(chan Message),
 		register:        make(chan Client),
 		unregister:      make(chan Client),
@@ -26,7 +26,7 @@ func NewInternalHub(logger *logger.Logger) Hub {
 	}
 }
 
-func (h InternalHub) Run() error {
+func (h hub) Run() error {
 	for {
 		select {
 		case conn := <-h.register:
@@ -57,15 +57,15 @@ func (h InternalHub) Run() error {
 	}
 }
 
-func (h InternalHub) Unregister(c Client) {
+func (h hub) Unregister(c Client) {
 	h.unregister <- c
 }
 
-func (h InternalHub) Register(c Client) {
+func (h hub) Register(c Client) {
 	h.register <- c
 }
 
 // Broadcast sends new message to the channel
-func (h InternalHub) Broadcast(m Message) {
+func (h hub) Broadcast(m Message) {
 	h.broadcast <- m
 }

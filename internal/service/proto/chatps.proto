@@ -1,0 +1,15 @@
+syntax = "proto3";
+package chatps.internal.service.proto; // todo проверить
+option go_package = "./;proto";
+
+
+service ChatPS {
+   // A Bidirectional streaming RPC.
+  rpc Exchange(stream Message) returns (stream Message) {}
+}
+
+message Message {
+  string chatID= 1;
+  string data = 2;
+}
+

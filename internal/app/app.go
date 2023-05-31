@@ -19,7 +19,7 @@ import (
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 	errChan := make(chan error, 1)
-	hub := service.NewInternalHub(l)
+	hub := service.NewHub(l)
 	socket := ws.Handler{Hub: hub, Cfg: cfg, Logger: l}
 	router := socket.InitRoutes()
 

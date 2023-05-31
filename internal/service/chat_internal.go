@@ -7,7 +7,7 @@ import (
 	"github.com/XXena/chatps/pkg/logger"
 )
 
-type InternalChat struct {
+type chat struct {
 	hub    Hub
 	ID     ChatID
 	mu     sync.RWMutex
@@ -16,7 +16,7 @@ type InternalChat struct {
 }
 
 // Publish чат рассылает сообщение клиента всем остальным подписанным на чат клиентам
-func (c *InternalChat) Publish(msg []byte) {
+func (c *chat) Publish(msg []byte) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	for _, ch := range c.subs[c.ID] {
@@ -26,7 +26,7 @@ func (c *InternalChat) Publish(msg []byte) {
 }
 
 // Subscribe клиент подписывается на чат
-func (c *InternalChat) Subscribe(ch chan []byte) {
+func (c *chat) Subscribe(ch chan []byte) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -35,7 +35,7 @@ func (c *InternalChat) Subscribe(ch chan []byte) {
 
 func NewInternalChat(hub Hub, ID ChatID, logger *logger.Logger) Chat {
 
-	return &InternalChat{
+	return &chat{
 		hub:    hub,
 		ID:     ID,
 		subs:   make(map[ChatID][]SendChan),

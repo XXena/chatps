@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WebsocketClient struct {
+type websocketClient struct {
 	wsConn   *websocket.Conn
 	chatID   string
 	sendChan SendChan
@@ -19,7 +19,7 @@ type WebsocketClient struct {
 }
 
 func NewWebsocketClient(hub Hub, conn *websocket.Conn, chatID string, logger *logger.Logger) Client {
-	return &WebsocketClient{
+	return &websocketClient{
 		Hub:      hub,
 		wsConn:   conn,
 		sendChan: make(SendChan),
@@ -28,20 +28,20 @@ func NewWebsocketClient(hub Hub, conn *websocket.Conn, chatID string, logger *lo
 	}
 }
 
-func (c WebsocketClient) GetChatID() ChatID {
+func (c websocketClient) GetChatID() ChatID {
 	return ChatID(c.chatID)
 }
 
-func (c WebsocketClient) GetHub() Hub {
+func (c websocketClient) GetHub() Hub {
 	return c.Hub
 }
 
-func (c WebsocketClient) GetSendChan() chan []byte {
+func (c websocketClient) GetSendChan() chan []byte {
 	return c.sendChan
 }
 
 // SendMessage reads message from the websocket connection and promotes to chat
-func (c WebsocketClient) SendMessage() error {
+func (c websocketClient) SendMessage() error {
 	defer func() {
 		c.Hub.Unregister(c)
 		err := c.wsConn.Close()
@@ -87,7 +87,7 @@ func (c WebsocketClient) SendMessage() error {
 }
 
 // PullMessage promotes message from the send channel to the websocket connection
-func (c WebsocketClient) PullMessage() error {
+func (c websocketClient) PullMessage() error {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -123,7 +123,7 @@ func (c WebsocketClient) PullMessage() error {
 }
 
 // Write writes a message with the given message type and payload
-func (c WebsocketClient) Write(mt int, payload []byte) error {
+func (c websocketClient) Write(mt int, payload []byte) error {
 	err := c.wsConn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err != nil {
 		return err
