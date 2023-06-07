@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/XXena/chatps/internal/entity"
+
 	"github.com/XXena/chatps/pkg/logger"
 
 	"github.com/gorilla/websocket"
 )
 
-type websocketClient struct {
+type websocketClientService struct {
 	wsConn   *websocket.Conn
 	chatID   string
 	sendChan SendChan
@@ -18,8 +20,8 @@ type websocketClient struct {
 	Hub      Hub
 }
 
-func NewWebsocketClient(hub Hub, conn *websocket.Conn, chatID string, logger *logger.Logger) Client {
-	return &websocketClient{
+func NewWebsocketClientsService(hub Hub, conn *websocket.Conn, chatID string, logger *logger.Logger) ClientsService {
+	return &websocketClientService{
 		Hub:      hub,
 		wsConn:   conn,
 		sendChan: make(SendChan),
@@ -28,20 +30,20 @@ func NewWebsocketClient(hub Hub, conn *websocket.Conn, chatID string, logger *lo
 	}
 }
 
-func (c websocketClient) GetChatID() ChatID {
-	return ChatID(c.chatID)
+func (c websocketClientService) GetChatID() entity.ChatID {
+	return entity.ChatID(c.chatID)
 }
 
-func (c websocketClient) GetHub() Hub {
+func (c websocketClientService) GetHub() Hub {
 	return c.Hub
 }
 
-func (c websocketClient) GetSendChan() chan []byte {
+func (c websocketClientService) GetSendChan() chan []byte {
 	return c.sendChan
 }
 
 // SendMessage reads message from the websocket connection and promotes to chat
-func (c websocketClient) SendMessage() error {
+func (c websocketClientService) SendMessage() error {
 	defer func() {
 		c.Hub.Unregister(c)
 		err := c.wsConn.Close()
@@ -70,13 +72,15 @@ func (c websocketClient) SendMessage() error {
 		_, msg, err2 := c.wsConn.ReadMessage()
 		if err2 != nil {
 			if websocket.IsUnexpectedCloseError(err2, websocket.CloseGoingAway) {
-				c.logger.Error(fmt.Errorf("read message from ws connection error: %w", err2))
+				c.logger.Error(fmt.Errorf("unexpected closing read message from ws connection error: %w", err2))
 				return err2
 			}
+			c.logger.Error(fmt.Errorf("read message from ws connection error: %w", err2))
+
 			break
 		}
 
-		m := Message{
+		m := entity.Message{
 			ChatID: c.GetChatID(),
 			Data:   msg,
 		}
@@ -87,7 +91,7 @@ func (c websocketClient) SendMessage() error {
 }
 
 // PullMessage promotes message from the send channel to the websocket connection
-func (c websocketClient) PullMessage() error {
+func (c websocketClientService) PullMessage() error {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -103,7 +107,7 @@ func (c websocketClient) PullMessage() error {
 			if !ok {
 				err := c.Write(websocket.CloseMessage, []byte{})
 				if err != nil {
-					c.logger.Error(fmt.Errorf("websocket message not received, then Write error: %w", err))
+					c.logger.Error(fmt.Errorf("websocket message not received, closing message error: %w", err))
 					return err
 				}
 				return errors.New("websocket message not received")
@@ -123,7 +127,7 @@ func (c websocketClient) PullMessage() error {
 }
 
 // Write writes a message with the given message type and payload
-func (c websocketClient) Write(mt int, payload []byte) error {
+func (c websocketClientService) Write(mt int, payload []byte) error {
 	err := c.wsConn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err != nil {
 		return err

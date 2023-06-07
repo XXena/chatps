@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/XXena/chatps/internal/entity"
+
 	"github.com/XXena/chatps/pkg/logger"
 )
 
 type chat struct {
 	hub    Hub
-	ID     ChatID
+	ID     entity.ChatID
 	mu     sync.RWMutex
-	subs   map[ChatID][]SendChan
+	subs   map[entity.ChatID][]SendChan
 	logger *logger.Logger
 }
 
@@ -33,12 +35,12 @@ func (c *chat) Subscribe(ch chan []byte) {
 	c.subs[c.ID] = append(c.subs[c.ID], ch)
 }
 
-func NewInternalChat(hub Hub, ID ChatID, logger *logger.Logger) Chat {
+func NewInternalChat(hub Hub, ID entity.ChatID, logger *logger.Logger) Chat {
 
 	return &chat{
 		hub:    hub,
 		ID:     ID,
-		subs:   make(map[ChatID][]SendChan),
+		subs:   make(map[entity.ChatID][]SendChan),
 		logger: logger,
 	}
 }

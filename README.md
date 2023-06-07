@@ -3,8 +3,8 @@
 
 
 # Websocket
-Need any websocket client installed for usage.
-Request example with wscat client:
+Need any websocket wsClientService installed for usage.
+Request example with wscat wsClientService:
 `wscat -c ws://localhost:8081/ws/<chat id>`
 
 `wscat -c ws://localhost:8081/ws/123`

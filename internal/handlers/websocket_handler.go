@@ -1,4 +1,4 @@
-package websocket
+package handlers
 
 import (
 	"fmt"
@@ -18,13 +18,13 @@ var (
 	//Done     chan interface{}       // todo
 )
 
-type Handler struct {
+type WebsocketHandler struct {
 	Hub    service.Hub
 	Cfg    *config.Config
 	Logger *logger.Logger
 }
 
-func (h Handler) InitRoutes() *chi.Mux {
+func (h WebsocketHandler) InitRoutes() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +37,7 @@ func (h Handler) InitRoutes() *chi.Mux {
 	return r
 }
 
-func (h Handler) socketHandler(w http.ResponseWriter, r *http.Request) {
+func (h WebsocketHandler) socketHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade our raw HTTP connection to a websocket based one
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -57,17 +57,17 @@ func (h Handler) socketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := service.NewWebsocketClient(
+	wsClientService := service.NewWebsocketClientsService(
 		h.Hub,
 		wsConn,
 		chatID,
 		h.Logger)
 
-	client.GetHub().Register(client)
+	wsClientService.GetHub().Register(wsClientService)
 
 	errChan := make(chan error, 1)
 	go func() {
-		err = client.PullMessage()
+		err = wsClientService.PullMessage()
 		if err != nil {
 			h.Logger.Error(fmt.Errorf("socket handler - PullMessage - error: %w", err))
 		}
@@ -75,7 +75,7 @@ func (h Handler) socketHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Debug("goroutine PullMessage passed")
 	go func() {
-		err = client.SendMessage()
+		err = wsClientService.SendMessage()
 		if err != nil {
 			h.Logger.Error(fmt.Errorf("socket handler - SendMessage - error: %w", err))
 		}

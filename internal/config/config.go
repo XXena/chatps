@@ -13,25 +13,25 @@ import (
 
 type (
 	Config struct {
-		App
-		HTTP
+		App       `env:",prefix=APP_"`
+		HTTP      `env:",prefix=HTTP_"`
 		WebSocket `env:",prefix=WS_"`
-		GRPC
+		GRPC      `env:",prefix=GRPC_"`
 		Log
 		Chat
 	}
 
 	App struct {
-		Name    string `env-required:"true"  env:"APP_NAME"`
-		Version string `env-required:"true" env:"APP_VERSION"`
+		Name    string `env-required:"true"  env:"NAME"`
+		Version string `env-required:"true" env:"VERSION"`
 	}
 
 	HTTP struct {
-		Port string `env-required:"true" env:"HTTP_PORT"`
+		Port string `env-required:"true" env:"PORT"`
 	}
 
 	WebSocket struct {
-		Server WebSocketServer `env:",prefix=SRV_"`
+		Server WebSocketServer
 	}
 
 	WebSocketServer struct {
@@ -42,7 +42,7 @@ type (
 	}
 
 	GRPC struct {
-		Port string `env-required:"true" env:"GRPC_PORT"`
+		Port string `env-required:"true" env:"PORT"`
 	}
 
 	Log struct {

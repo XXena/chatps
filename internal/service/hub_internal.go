@@ -1,27 +1,30 @@
 package service
 
-import "github.com/XXena/chatps/pkg/logger"
+import (
+	"github.com/XXena/chatps/internal/entity"
+	"github.com/XXena/chatps/pkg/logger"
+)
 
 // hub maintains the set of active chats
 type hub struct {
 	// Registered chats grouped by id
-	registeredChats map[ChatID]Chat
+	registeredChats map[entity.ChatID]Chat
 
 	// Inbound messages from the connections
-	broadcast chan Message
+	broadcast chan entity.Message
 
-	register chan Client
+	register chan ClientsService
 
-	unregister chan Client
+	unregister chan ClientsService
 	logger     *logger.Logger
 }
 
 func NewHub(logger *logger.Logger) Hub {
 	return hub{
-		broadcast:       make(chan Message),
-		register:        make(chan Client),
-		unregister:      make(chan Client),
-		registeredChats: make(map[ChatID]Chat),
+		broadcast:       make(chan entity.Message),
+		register:        make(chan ClientsService),
+		unregister:      make(chan ClientsService),
+		registeredChats: make(map[entity.ChatID]Chat),
 		logger:          logger,
 	}
 }
@@ -57,15 +60,15 @@ func (h hub) Run() error {
 	}
 }
 
-func (h hub) Unregister(c Client) {
+func (h hub) Unregister(c ClientsService) {
 	h.unregister <- c
 }
 
-func (h hub) Register(c Client) {
+func (h hub) Register(c ClientsService) {
 	h.register <- c
 }
 
 // Broadcast sends new message to the channel
-func (h hub) Broadcast(m Message) {
+func (h hub) Broadcast(m entity.Message) {
 	h.broadcast <- m
 }

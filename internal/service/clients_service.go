@@ -2,6 +2,8 @@ package service
 
 import (
 	"time"
+
+	"github.com/XXena/chatps/internal/entity"
 )
 
 const (
@@ -18,10 +20,10 @@ const (
 	maxMessageSize = 512
 )
 
-type Client interface {
+type ClientsService interface {
 	SendMessage() error
 	PullMessage() error
-	GetChatID() ChatID
+	GetChatID() entity.ChatID
 	GetSendChan() chan []byte
 	GetHub() Hub
 }
